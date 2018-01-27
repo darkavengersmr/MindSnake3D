@@ -1,0 +1,394 @@
+struct coord{
+  int x;
+  int y;
+  int z;
+};
+
+coord head;
+coord eda;
+coord max;
+
+int snake[3][3][3];
+
+void food(){
+  while(true){
+    eda.x=Random(2999)/1000.0;
+    eda.y=Random(2999)/1000.0;
+    eda.z=Random(2999)/1000.0;
+    if(snake[eda.x][eda.y][eda.z]==0){
+      break;
+    }
+  }
+}
+
+int otkl(int a, int b)
+{
+  return ((a+36000)%360 + 540 - b)%360 - 180;
+}
+
+int direct(){
+  if(abs(otkl(MotorRotationCount(OUT_B),0))<=45){
+    return 4;
+  }
+  if(abs(otkl(MotorRotationCount(OUT_B),180))<=45){
+    return 5;
+  }
+  
+  if(abs(otkl(MotorRotationCount(OUT_A),0))<=45 && abs(otkl(MotorRotationCount(OUT_B),90))<=45){
+    return 3;
+  }
+
+  if(abs(otkl(MotorRotationCount(OUT_A),0))<=45 && abs(otkl(MotorRotationCount(OUT_B),270))<=45){
+    return 2;
+  }
+
+  if(abs(otkl(MotorRotationCount(OUT_A),90))<=45 && abs(otkl(MotorRotationCount(OUT_B),90))<=45){
+    return 1;
+  }
+
+  if(abs(otkl(MotorRotationCount(OUT_A),90))<=45 && abs(otkl(MotorRotationCount(OUT_B),270))<=45){
+    return 0;
+  }
+
+  if(abs(otkl(MotorRotationCount(OUT_A),180))<=45 && abs(otkl(MotorRotationCount(OUT_B),90))<=45){
+    return 3;
+  }
+
+  if(abs(otkl(MotorRotationCount(OUT_A),180))<=45 && abs(otkl(MotorRotationCount(OUT_B),270))<=45){
+    return 2;
+  }
+
+  if(abs(otkl(MotorRotationCount(OUT_A),270))<=45 && abs(otkl(MotorRotationCount(OUT_B),90))<=45){
+    return 1;
+  }
+
+  if(abs(otkl(MotorRotationCount(OUT_A),270))<=45 && abs(otkl(MotorRotationCount(OUT_B),270))<=45){
+    return 0;
+  }
+
+  return -1;
+}
+int time_hod=5000;
+int direction=4;//0-туда1-обратно2-вверх3-вниз4-вправо5-влево
+int eda_farther=0;
+int maxa=0;
+int direction_old=4;
+long ti;
+int len=1;
+int level=0;
+int len_up;
+task main()
+{
+  ClearScreen();
+  //TextOut(0,16,"Easy");
+  //TextOut(0,8,"Normal");
+  //TextOut(0,0,"Hard");
+  Wait(1000);
+  while(ButtonPressed(BTNCENTER,0)
+  && ButtonPressed(BTNLEFT,0)
+  && ButtonPressed(BTNRIGHT,0)){
+
+  }
+  if(ButtonPressed(BTNCENTER,1)){
+    level=2;
+    len_up=9;
+    time_hod=5000;
+    ClearScreen();
+  //  TextOut(0,0,"Normal");
+  }
+  if(ButtonPressed(BTNLEFT,1)){
+    level=1;
+    len_up=3;
+    time_hod=5000;
+    ClearScreen();
+  //  TextOut(0,0,"Easy");
+  }
+  if(ButtonPressed(BTNRIGHT,1)){
+    level=3;
+    len_up=9;
+    time_hod=3000;
+    ClearScreen();
+  //  TextOut(0,0,"Hard");
+  }
+  Wait(3000);
+
+  eda.x=10;
+  eda.y=10;
+  eda.z=10;
+  head.x=1;
+  head.y=1;
+  head.z=1;
+  PlayFile("start.rso");
+  PlayFile("center.rso");
+  ResetRotationCount(OUT_AB);
+  direction=direct();
+  for(int i=0;i<=2;i++){
+    for(int z=0;z<=2;z++){
+      for(int q=0;q<=2;q++){
+        snake[i][z][q]=0;
+      }
+    }
+  }
+  snake[1][1][1]=1;
+  long time=CurrentTick();
+  long time_eda=CurrentTick();
+  while(true){
+    if(len==len_up && level==3){
+      break;
+      PlayFile("levelup.rso");
+    }
+    if(len==len_up && level==2){
+      level=3;
+      len_up=9;
+      time_hod=3000;
+      PlayFile("levelup.rso");
+      Wait(1000);
+    }
+    if(len==len_up && level==1){
+      level=2;
+      len_up=6;
+      PlayFile("levelup.rso");
+      Wait(1000);
+    }
+
+    direction_old=direction;
+    direction=direct();
+
+    if(direction!=direction_old){
+      switch(direction)
+      {
+      case 0:
+        PlayFile("farther.rso");
+        Wait(1000);
+        break;
+       case 1:
+         PlayFile("closer.rso");
+         Wait(1000);
+         break;
+       case 2:
+         PlayFile("up.rso");
+         Wait(1000);
+         break;
+       case 3:
+         PlayFile("down.rso");
+         Wait(1000);
+         break;
+       case 4:
+         PlayFile("right.rso");
+         Wait(1000);
+         break;
+       case 5:
+         PlayFile("left.rso");
+         Wait(1000);
+         break;
+       default:
+         break;
+       }
+    }
+    if(CurrentTick()-time_eda>=20000){
+      time_eda=CurrentTick();
+      food();
+      PlayFile("food.rso");
+      Wait(1000);
+      if(eda.y==0){
+        PlayFile("3.rso");
+        Wait(1000);
+      }
+      if(eda.y==1){
+        PlayFile("2.rso");
+        Wait(1000);
+      }
+      if(eda.y==2){
+        PlayFile("1.rso");
+        Wait(1000);
+      }
+      if(eda.z==2){
+        if(eda.x==0){
+          PlayFile("1.rso");
+          Wait(1000);
+        }
+        if(eda.x==1){
+          PlayFile("2.rso");
+          Wait(1000);
+        }
+        if(eda.x==2){
+          PlayFile("3.rso");
+          Wait(1000);
+        }
+      }
+      if(eda.z==1){
+        if(eda.x==0){
+          PlayFile("4.rso");
+          Wait(1000);
+        }
+        if(eda.x==1){
+          PlayFile("5.rso");
+          Wait(1000);
+        }
+        if(eda.x==2)
+        {
+          PlayFile("6.rso");
+          Wait(1000);
+        }
+      }
+      if(eda.z==0){
+        if(eda.x==0){
+          PlayFile("7.rso");
+          Wait(1000);
+        }
+        if(eda.x==1){
+          PlayFile("8.rso");
+          Wait(1000);
+        }
+        if(eda.x==2){
+          PlayFile("9.rso");
+          Wait(1000);
+        }
+      }
+
+    }
+    if(CurrentTick() - ti>=1000){
+      ti=CurrentTick();
+ //     ClearScreen();
+     // NumOut(10,0,eda.z);
+    // / NumOut(10,8,eda.y);
+    //  NumOut(10,16,eda.x);
+    //  NumOut(0,0,head.z);
+   ///   NumOut(0,8,head.y);
+    //  NumOut(0,16,head.x);
+    //  NumOut(0,24,direction);
+     // NumOut(5,0,len);
+    }
+    if(CurrentTick()-time>=time_hod){
+      PlayTone(440,100);
+      time_hod=time_hod-10;
+        
+      time=CurrentTick()
+      if(head.x==2 && direction==4
+      || head.x==0 && direction==5
+      || head.y==2 && direction==2
+      || head.y==0 && direction==3
+      || head.z==2 && direction==0
+      || head.z==0 && direction==1){
+        break;
+      }
+      
+      eda_farther=0;
+      
+      if(direction==0 && head.x==eda.x && head.y==eda.y && head.z+1==eda.z){
+        eda_farther=1;
+      }
+      if(direction==1 && head.x==eda.x && head.y==eda.y && head.z-1==eda.z){
+        eda_farther=1;
+      }
+      if(direction==2 && head.x==eda.x && head.y+1==eda.y && head.z==eda.z){
+        eda_farther=1;
+      }
+      if(direction==3 && head.x==eda.x && head.y-1==eda.y && head.z==eda.z){
+        eda_farther=1;
+      }
+      if(direction==4 && head.x+1==eda.x && head.y==eda.y && head.z==eda.z){
+        eda_farther=1;
+      }
+      if(direction==5 && head.x-1==eda.x && head.y==eda.y && head.z==eda.z){
+        eda_farther=1;
+      }
+      for(int i=0;i<=2;i++){
+        for(int z=0;z<=2;z++){
+          for(int q=0;q<=2;q++){
+            if(snake[i][z][q]!=0){
+              snake[i][z][q]+=1;
+            }
+          }
+        }
+      }
+      max=0;
+      for(int i=0;i<=2;i++){
+        for(int z=0;z<=2;z++){
+          for(int q=0;q<=2;q++){
+            if(snake[i][z][q]>maxa){
+              maxa=snake[i][z][q];
+              max.x=i;
+              max.y=z;
+              max.z=q;
+            }
+          }
+        }
+      }
+
+      if(eda_farther==0){
+        snake[max.x][max.y][max.z]=0;
+      }
+      else{
+        len++;
+        time_eda=CurrentTick();
+        eda.x=10;
+        eda.y=10;
+        eda.z=10;
+        PlayFile("len.rso");
+        Wait(1000);
+      }
+      maxa=0;
+      max.x=0;
+      max.y=0;
+      max.z=0;
+      if(direction==0){
+        if(snake[head.x][head.y][head.z+1]==0){
+          snake[head.x][head.y][head.z+1]=1;
+          head.z++;
+        }
+        else{
+          break;
+        }
+      }
+      if(direction==1){
+        if(snake[head.x][head.y][head.z-1]==0){
+          snake[head.x][head.y][head.z-1]=1;
+          head.z--;
+        }
+        else{
+          break;
+        }
+      }
+      if(direction==2){
+        if(snake[head.x][head.y+1][head.z]==0){
+          snake[head.x][head.y+1][head.z]=1;
+          head.y++;
+        }
+        else{
+          break;
+        }
+      }
+      if(direction==3){
+        if(snake[head.x][head.y-1][head.z]==0){
+          snake[head.x][head.y-1][head.z]=1;
+          head.y--;
+        }
+        else{
+          break;
+        }
+      }
+      if(direction==4){
+        if(snake[head.x+1][head.y][head.z]==0){
+          snake[head.x+1][head.y][head.z]=1;
+          head.x++;
+        }
+        else{
+          break;
+        }
+      }
+      if(direction==5){
+        if(snake[head.x-1][head.y][head.z]==0){
+          snake[head.x-1][head.y][head.z]=1;
+          head.x--;
+        }
+        else{
+          break;
+        }
+      }
+      direction=direct();
+    }
+  }
+  PlayFile("end.rso");
+  Wait(1000);
+}
